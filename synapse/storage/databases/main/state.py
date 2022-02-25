@@ -14,10 +14,10 @@
 # limitations under the License.
 import collections.abc
 import logging
-from typing import TYPE_CHECKING, Iterable, Optional, Set
+from typing import TYPE_CHECKING, Collection, Iterable, Optional, Set
 
 from synapse.api.constants import EventTypes, Membership
-from synapse.api.errors import NotFoundError, UnsupportedRoomVersionError
+from synapse.api.errors import NotFoundError, StoreError, UnsupportedRoomVersionError
 from synapse.api.room_versions import KNOWN_ROOM_VERSIONS, RoomVersion
 from synapse.events import EventBase
 from synapse.storage._base import SQLBaseStore
@@ -305,7 +305,7 @@ class StateGroupWorkerStore(EventsWorkerStore, SQLBaseStore):
         list_name="event_ids",
         num_args=1,
     )
-    async def _get_state_group_for_events(self, event_ids):
+    async def _get_state_group_for_events(self, event_ids: Collection[str]):
         """Returns mapping event_id -> state_group"""
         rows = await self.db_pool.simple_select_many_batch(
             table="event_to_state_groups",
@@ -316,7 +316,12 @@ class StateGroupWorkerStore(EventsWorkerStore, SQLBaseStore):
             desc="_get_state_group_for_events",
         )
 
-        return {row["event_id"]: row["state_group"] for row in rows}
+        res = {row["event_id"]: row["state_group"] for row in rows}
+        for e in event_ids:
+            if e not in res:
+                raise StoreError(
+                    404, "No state group for unknown or outlier event %s" % e
+                )
 
     async def get_referenced_state_groups(
         self, state_groups: Iterable[int]

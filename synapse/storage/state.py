@@ -571,6 +571,10 @@ class StateGroupStorage:
 
         Returns:
             dict of state_group_id -> (dict of (type, state_key) -> event id)
+
+        Raises:
+            StoreError if we don't have a state group for any of the events (ie they
+               are outliers or unknown)
         """
         if not event_ids:
             return {}
@@ -659,6 +663,10 @@ class StateGroupStorage:
 
         Returns:
             A dict of (event_id) -> (type, state_key) -> [state_events]
+
+        Raises:
+            StoreError if we don't have a state group for any of the events (ie they
+               are outliers or unknown)
         """
         event_to_groups = await self.stores.main._get_state_group_for_events(event_ids)
 
@@ -696,6 +704,10 @@ class StateGroupStorage:
 
         Returns:
             A dict from event_id -> (type, state_key) -> event_id
+
+        Raises:
+            StoreError if we don't have a state group for any of the events (ie they
+               are outliers or unknown)
         """
         event_to_groups = await self.stores.main._get_state_group_for_events(event_ids)
 
@@ -723,6 +735,10 @@ class StateGroupStorage:
 
         Returns:
             A dict from (type, state_key) -> state_event
+
+        Raises:
+            StoreError if we don't have a state group for the event (ie it is an
+               outlier or is unknown)
         """
         state_map = await self.get_state_for_events(
             [event_id], state_filter or StateFilter.all()
