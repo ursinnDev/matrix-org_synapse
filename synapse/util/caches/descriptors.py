@@ -386,13 +386,13 @@ class DeferredCacheListDescriptor(_CacheDescriptorBase):
 
     def __get__(
         self, obj: Optional[Any], objtype: Optional[Type] = None
-    ) -> Callable[..., defer.Deferred[Dict[Hashable, Any]]]:
+    ) -> Callable[..., "defer.Deferred[Dict[Hashable, Any]]"]:
         cached_method = getattr(obj, self.cached_method_name)
         cache: DeferredCache[CacheKey, Any] = cached_method.cache
         num_args = cached_method.num_args
 
         @functools.wraps(self.orig)
-        def wrapped(*args: Any, **kwargs: Any) -> defer.Deferred[Dict]:
+        def wrapped(*args: Any, **kwargs: Any) -> "defer.Deferred[Dict]":
             # If we're passed a cache_context then we'll want to call its
             # invalidate() whenever we are invalidated
             invalidate_callback = kwargs.pop("on_invalidate", None)
